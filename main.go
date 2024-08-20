@@ -14,8 +14,7 @@ import (
 func main() {
   mrpack := os.Args[1]
   
-  downPtr := flag.Bool("download", true, "Set to false to skip JAR download")
-  //zipPtr := flag.Bool("zip", true, "Set to false to skip zipping the folder.")
+  downPtr := flag.Bool("download", true, "Set to false to skip downloads")
 
   flag.Parse()
 
@@ -31,11 +30,6 @@ func main() {
   var jsonf map[string]interface{}
   jsonf = openjson(tempfolder + "modrinth.index.json")
 
-  //files := jsonf["files"].(map[string]interface{})
-  //for i := range files {
-  //  fmt.Println(i)
-  //}
-
   exePath, err := os.Executable()
   if err != nil {
     fmt.Printf("Error getting executable path: %v\n", err)
@@ -49,14 +43,16 @@ func main() {
   var packFolder = "" 
   packFolder = filepath.Dir(exePath) + "/" + strings.ToLower(strings.ReplaceAll(jsonf["name"].(string), " ", "-") + "/")
   os.MkdirAll(packFolder + "mods/", os.ModePerm)
+  os.MkdirAll(packFolder + "resourcepacks/", os.ModePerm)
 
   fmt.Println("The modpack will be downloaded to: '" + packFolder +"'")
-
-  addOverrides(packFolder, tempfolder)
-  
+ 
   if *downPtr == true {
     downloadMods(packFolder, jsonf)
+    downloadResourcePacks(packFolder, jsonf)
   }
-  
+
+  addOverrides(packFolder, tempfolder)
+
   os.RemoveAll(tempfolder)
 }

@@ -79,4 +79,4 @@ func gounzip(source, dest string) error {
         rc.Close()
       }
       return nil
-    }
+  }
