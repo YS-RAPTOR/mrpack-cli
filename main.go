@@ -12,47 +12,48 @@ import (
 )
 
 func main() {
-  mrpack := os.Args[1]
-  
-  downPtr := flag.Bool("download", true, "Set to false to skip downloads")
+	mrpack := os.Args[1]
 
-  flag.Parse()
+	downPtr := flag.Bool("download", true, "Set to false to skip downloads")
 
-  var tempfolder = "mrpack-cli-" + strconv.FormatInt(rand.Int64N(99999), 10) + "/"
+	flag.Parse()
 
-  if runtime.GOOS == "windows" {
-    tempfolder = os.Getenv("APPDATA") + tempfolder
-  } else if runtime.GOOS == "linux" {
-    tempfolder = "/tmp/" + tempfolder
-  }
-  os.MkdirAll(tempfolder, 0700)
-  unzip(mrpack, tempfolder)
-  var jsonf map[string]interface{}
-  jsonf = openjson(tempfolder + "modrinth.index.json")
+	var tempfolder = "mrpack-cli-" + strconv.FormatInt(rand.Int64N(99999), 10) + "/"
 
-  exePath, err := os.Executable()
-  if err != nil {
-    fmt.Printf("Error getting executable path: %v\n", err)
-  }
+	if runtime.GOOS == "windows" {
+		tempfolder = strings.ReplaceAll(tempfolder, "/", "\\")
+		tempfolder = os.Getenv("APPDATA") + "\\" + tempfolder
+	} else if runtime.GOOS == "linux" {
+		tempfolder = "/tmp/" + tempfolder
+	}
+	os.MkdirAll(tempfolder, 0700)
+	unzip(mrpack, tempfolder)
+	//var jsonf
+	var jsonf map[string]interface{} = openjson(tempfolder + "modrinth.index.json")
 
-  exePath, err = filepath.Abs(exePath)
-  if err != nil {
-    fmt.Printf("Error getting absolute path: %v\n", err)
-  }
+	exePath, err := os.Executable()
+	if err != nil {
+		fmt.Printf("Error getting executable path: %v\n", err)
+	}
 
-  var packFolder = "" 
-  packFolder = filepath.Dir(exePath) + "/" + strings.ToLower(strings.ReplaceAll(jsonf["name"].(string), " ", "-") + "/")
-  os.MkdirAll(packFolder + "mods/", os.ModePerm)
-  os.MkdirAll(packFolder + "resourcepacks/", os.ModePerm)
+	exePath, err = filepath.Abs(exePath)
+	if err != nil {
+		fmt.Printf("Error getting absolute path: %v\n", err)
+	}
 
-  fmt.Println("The modpack will be downloaded to: '" + packFolder +"'")
- 
-  if *downPtr == true {
-    downloadMods(packFolder, jsonf)
-    downloadResourcePacks(packFolder, jsonf)
-  }
+	var packFolder = ""
+	packFolder = filepath.Dir(exePath) + "/" + strings.ToLower(strings.ReplaceAll(jsonf["name"].(string), " ", "-")+"/")
+	os.MkdirAll(packFolder+"mods/", os.ModePerm)
+	os.MkdirAll(packFolder+"resourcepacks/", os.ModePerm)
 
-  addOverrides(packFolder, tempfolder)
+	fmt.Println("The modpack will be downloaded to: '" + packFolder + "'")
 
-  os.RemoveAll(tempfolder)
+	if *downPtr {
+		downloadMods(packFolder, jsonf)
+		downloadResourcePacks(packFolder, jsonf)
+	}
+
+	addOverrides(packFolder, tempfolder)
+
+	os.RemoveAll(tempfolder)
 }
