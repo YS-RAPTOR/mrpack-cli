@@ -1,11 +1,14 @@
 package main
 
 import (
+	"crypto/sha512"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -37,6 +40,28 @@ func downloadMods(packFolder string, jsonf map[string]interface{}) {
 						}
 						defer resp.Body.Close()
 						_ = n // Just to make the compiler shut up
+
+						// Read SHA 512 hash
+						f, err := os.Open(packFolder + "mods/" + strings.Split(path, "/")[1])
+						if err != nil {
+							panic(err)
+						}
+
+						has := sha512.New()
+						if _, err := io.Copy(has, f); err != nil {
+							panic(err)
+						}
+						f.Close()
+
+						if hashes, ok := modMap["hashes"].(map[string]interface{}); ok {
+							fhas := hashes["sha512"].(string)
+							if fhas != hex.EncodeToString(has.Sum(nil)) {
+								fmt.Println("Warning: Potential Fake Mod")
+								fmt.Println("The mod hash doesn't match what is recorded in the .mrpack, which may indicate a fake or modified version. Please verify the mod’s source and ensure it’s from a trusted provider. (e.g., Modrinth)")
+								fmt.Println("File deleted.")
+								os.Remove(packFolder + "mods/" + strings.Split(path, "/")[1])
+							}
+						}
 					}
 					downloaded++
 				}
@@ -72,6 +97,28 @@ func downloadResourcePacks(packFolder string, jsonf map[string]interface{}) {
 						}
 						defer resp.Body.Close()
 						_ = n // Just to make the compiler shut up
+
+						// Read SHA 512 hash
+						f, err := os.Open(packFolder + "resourcepacks/" + strings.Split(path, "/")[1])
+						if err != nil {
+							panic(err)
+						}
+
+						has := sha512.New()
+						if _, err := io.Copy(has, f); err != nil {
+							panic(err)
+						}
+						f.Close()
+
+						if hashes, ok := modMap["hashes"].(map[string]interface{}); ok {
+							fhas := hashes["sha512"].(string)
+							if fhas != hex.EncodeToString(has.Sum(nil)) {
+								fmt.Println("Warning: Potential Fake Resource Pack")
+								fmt.Println("The resource pack hash doesn't match what is recorded in the .mrpack, which may indicate a fake or modified version. Please verify the resource pack’s source and ensure it’s from a trusted provider. (e.g., Modrinth)")
+								fmt.Println("File deleted.")
+								os.Remove(packFolder + "resourcepacks/" + strings.Split(path, "/")[1])
+							}
+						}
 					}
 					downloaded++
 				}
@@ -84,9 +131,18 @@ func downloadResourcePacks(packFolder string, jsonf map[string]interface{}) {
 
 func addOverrides(packFolder string, tempFolder string) {
 	fmt.Println("Copy: "+tempFolder+"overrides", "->", packFolder)
-	cmd, err := exec.Command("/bin/sh", "-c", "cp -r "+tempFolder+"overrides/* "+packFolder).Output()
-	if err != nil {
-		panic(err)
+	switch runtime.GOOS {
+	case "linux":
+		cmd, err := exec.Command("/bin/sh", "-c", "cp -r "+tempFolder+"overrides/* "+packFolder).Output()
+		if err != nil {
+			panic(err)
+		}
+		_ = cmd
+	case "windows":
+		cmd, err := exec.Command("xcopy", tempFolder+"overrides\\*", packFolder, "/E").Output()
+		if err != nil {
+			panic(err)
+		}
+		_ = cmd
 	}
-	fmt.Println(cmd)
 }
