@@ -26,3 +26,8 @@ Usage of mrpack-cli:
 This project is licensed under the Apache License 2.0
 ## Acknowledgments
 - [Modrinth](https://modrinth.com)
+
+This project makes use of the following third-party libraries:
+- **color** by Fatih Arslan, licensed under the MIT License. [Link](https://github.com/fatih/color)
+
+For more details on the license, please refer to the `LICENSE` and `LICENSE-MIT` files in this repository.
