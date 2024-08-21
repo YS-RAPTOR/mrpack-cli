@@ -11,6 +11,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 var downloaded = 1
@@ -22,7 +24,13 @@ func downloadMods(packFolder string, jsonf map[string]interface{}) {
 				path := modMap["path"].(string)
 
 				if strings.Contains(path, "mods") {
-					fmt.Println("Downloading mod:", strings.Split(path, "/")[1], "("+strconv.FormatInt(int64(downloaded), 10)+"/"+strconv.FormatInt(int64(len(mods)), 10)+")")
+					color.Set(color.FgGreen)
+					fmt.Print("Downloading mod: ")
+					color.Set(color.Bold)
+					fmt.Print(strings.Split(path, "/")[1])
+					color.Set(color.ResetBold)
+					fmt.Println(" ("+strconv.FormatInt(int64(downloaded), 10)+"/"+strconv.FormatInt(int64(len(mods)), 10)+")")
+					color.Unset()
 					out, err := os.Create(packFolder + "mods/" + strings.Split(path, "/")[1])
 					if err != nil {
 						panic(err)
@@ -56,9 +64,11 @@ func downloadMods(packFolder string, jsonf map[string]interface{}) {
 						if hashes, ok := modMap["hashes"].(map[string]interface{}); ok {
 							fhas := hashes["sha512"].(string)
 							if fhas != hex.EncodeToString(has.Sum(nil)) {
+								color.Set(color.FgRed)
 								fmt.Println("Warning: Potential Fake Mod")
 								fmt.Println("The mod hash doesn't match what is recorded in the .mrpack, which may indicate a fake or modified version. Please verify the mod’s source and ensure it’s from a trusted provider. (e.g., Modrinth)")
 								fmt.Println("File deleted.")
+								color.Unset()
 								os.Remove(packFolder + "mods/" + strings.Split(path, "/")[1])
 							}
 						}
@@ -79,7 +89,13 @@ func downloadResourcePacks(packFolder string, jsonf map[string]interface{}) {
 				path := modMap["path"].(string)
 
 				if strings.Contains(path, "resourcepack") {
-					fmt.Println("Downloading resourcepack:", strings.Split(path, "/")[1], "("+strconv.FormatInt(int64(downloaded), 10)+"/"+strconv.FormatInt(int64(len(mods)), 10)+")")
+					color.Set(color.FgBlue)
+					fmt.Print("Downloading resourcepack:") 
+					color.Set(color.Bold)
+					fmt.Print(strings.Split(path, "/")[1])
+					color.Set(color.ResetBold)
+					fmt.Println("("+strconv.FormatInt(int64(downloaded), 10)+"/"+strconv.FormatInt(int64(len(mods)), 10)+")")
+					color.Unset()
 					out, err := os.Create(packFolder + "resourcepacks/" + strings.Split(path, "/")[1])
 					if err != nil {
 						panic(err)
@@ -113,9 +129,11 @@ func downloadResourcePacks(packFolder string, jsonf map[string]interface{}) {
 						if hashes, ok := modMap["hashes"].(map[string]interface{}); ok {
 							fhas := hashes["sha512"].(string)
 							if fhas != hex.EncodeToString(has.Sum(nil)) {
+								color.Set(color.FgRed)
 								fmt.Println("Warning: Potential Fake Resource Pack")
 								fmt.Println("The resource pack hash doesn't match what is recorded in the .mrpack, which may indicate a fake or modified version. Please verify the resource pack’s source and ensure it’s from a trusted provider. (e.g., Modrinth)")
 								fmt.Println("File deleted.")
+								color.Unset()
 								os.Remove(packFolder + "resourcepacks/" + strings.Split(path, "/")[1])
 							}
 						}
@@ -125,7 +143,8 @@ func downloadResourcePacks(packFolder string, jsonf map[string]interface{}) {
 			}
 		}
 	} else {
-		fmt.Println("Expected 'files' to be a slice, but got something else.")
+		fmt.Println("Expected 'files' to be a slice, but got ")
+		os.Exit(1)
 	}
 }
 
@@ -135,13 +154,17 @@ func addOverrides(packFolder string, tempFolder string) {
 	case "linux":
 		cmd, err := exec.Command("/bin/sh", "-c", "cp -r "+tempFolder+"overrides/* "+packFolder).Output()
 		if err != nil {
-			panic(err)
+			color.Set(color.FgRed)
+			fmt.Println("Could not copy overrides: %v", err)
+			color.Unset()
 		}
 		_ = cmd
 	case "windows":
 		cmd, err := exec.Command("xcopy", tempFolder+"overrides\\*", packFolder, "/E").Output()
 		if err != nil {
-			panic(err)
+			color.Set(color.FgRed)
+			fmt.Println("Could not copy overrides: %v", err)
+			color.Unset()
 		}
 		_ = cmd
 	}

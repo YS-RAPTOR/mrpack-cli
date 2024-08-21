@@ -8,7 +8,7 @@ A simple command-line tool to extract .mrpack files
 ```
 Usage of mrpack-cli:
   -download
-        Set to false to skip downloads (default: false)
+        Set to false to skip downloads (default: true)
 ```
 
 ## Getting Started

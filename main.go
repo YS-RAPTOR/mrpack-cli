@@ -9,12 +9,14 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 func main() {
 	mrpack := os.Args[1]
 
-	downPtr := flag.Bool("download", true, "Set to false to skip downloads")
+	downPtr := flag.Bool("download", true, "Set to false to skip downloads (default: true)")
 
 	flag.Parse()
 
@@ -31,14 +33,32 @@ func main() {
 	//var jsonf
 	var jsonf map[string]interface{} = openjson(tempfolder + "modrinth.index.json")
 
+	if jsonf["game"] != "minecraft" {
+		color.Set(color.FgRed)
+		fmt.Println("ERROR: Game not supported.")
+		color.Unset()
+		os.Exit(1)
+	}
+	if jsonf["formatVersion"] != "1" {
+		color.Set(color.FgYellow)
+		fmt.Println("WARNING: formatVersion not '1'.")
+		color.Unset()
+	}
+
 	exePath, err := os.Executable()
 	if err != nil {
-		fmt.Printf("Error getting executable path: %v\n", err)
+		color.Set(color.FgRed)
+		fmt.Println("Error getting executable path: %v\n", err)
+		color.Unset()
+		os.Exit(1)
 	}
 
 	exePath, err = filepath.Abs(exePath)
 	if err != nil {
-		fmt.Printf("Error getting absolute path: %v\n", err)
+		color.Set(color.FgRed)
+		fmt.Println("Error getting absolute path: %v\n", err)
+		color.Unset()
+		os.Exit(1)
 	}
 
 	var packFolder = ""
@@ -46,7 +66,9 @@ func main() {
 	os.MkdirAll(packFolder+"mods/", os.ModePerm)
 	os.MkdirAll(packFolder+"resourcepacks/", os.ModePerm)
 
+	color.Set(color.FgGreen)
 	fmt.Println("The modpack will be downloaded to: '" + packFolder + "'")
+	color.Unset()
 
 	if *downPtr {
 		downloadMods(packFolder, jsonf)

@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+
+	"github.com/fatih/color"
 )
 
 func unzip(source, dest string) error {
@@ -30,7 +32,9 @@ func unzip(source, dest string) error {
 }
 
 func gounzip(source, dest string) error {
+	color.Set(color.FgRed)
 	fmt.Println("unzip not found, using Go unzip which will NOT extract overrides")
+	color.Unset()
 	r, err := zip.OpenReader(source)
 	if err != nil {
 		return fmt.Errorf("failed to open ZIP file: %w", err)
