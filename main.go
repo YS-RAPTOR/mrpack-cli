@@ -88,6 +88,9 @@ func main() {
 				if installfabric(packFolder, tempfolder, gamever) != nil {
 					fmt.Println("Function: installfabric has errored out")
 				}
+				if addFabricEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf["name"].(string), " ", "-"))) != nil {
+					fmt.Println("Function: addFabricEntry has errored out")
+				}
 			}
 		}
 	}

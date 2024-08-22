@@ -1,13 +1,15 @@
 package main
 
 import (
-	//"bytes"
+	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
 	"runtime"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -59,6 +61,73 @@ func installfabric(packfolder, tempfolder, gameversion string) error {
 	}
 
 	fmt.Printf("%s\n", output)
+
+	return nil
+}
+
+func addFabricEntry(packfolder, packname string) error {
+	var launcherfolder string
+
+	switch runtime.GOOS {
+	case "windows":
+		launcherfolder = os.Getenv("APPDATA") + "\\.minecraft\\"
+	case "linux":
+		launcherfolder = "~/.minecraft/"
+	}
+
+	color.Set(color.FgGreen)
+	fmt.Println("Getting icon from Modrinth...")
+	color.Unset()
+
+	n, err := http.Get("https://api.modrinth.com/v2/project/" + packname)
+	if err != nil {
+		fmt.Println("Could not communicate with Modrinth API: %v", err)
+		return err
+	}
+
+	api, err := io.ReadAll(n.Body)
+	if err != nil {
+		fmt.Println("Could not read Modrinth API response body: %v", err)
+		return err
+	}
+
+	var iconURI string
+
+	var js map[string]interface{} = openjsonfromstring(string(api))
+	if uri, ok := js["icon_url"].(string); ok {
+		n, err := http.Get(uri)
+		if err != nil {
+			fmt.Println("Could not get icon: %v", err)
+			return err
+		}
+
+		d, err := io.ReadAll(n.Body)
+		if err != nil {
+			fmt.Println("Could not read icon: %v", err)
+			return err
+		}
+
+		id, err := hex.DecodeString(string(d))
+		if err != nil {
+			fmt.Println("Could not decode hex: %v", err)
+			return err
+		}
+
+		img := base64.StdEncoding.EncodeToString(id)
+
+		iconURI = fmt.Sprintf("data:image/png;base64," + img)
+	}
+
+	var ljs map[string]interface{} = openjson(launcherfolder + "launcher_profiles.json")
+	if pf, ok := ljs["profiles"].(map[string]interface{}); ok {
+		pf[packname] = map[string]interface{}{
+			"type":     "custom",
+			"created":  time.Now().Format(time.RFC3339),
+			"lastUsed": time.Time{},
+			"icon":     iconURI,
+			"gameDir":  packfolder,
+		}
+	}
 
 	return nil
 }

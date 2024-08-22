@@ -18,3 +18,9 @@ func openjson(tmpfolder string) map[string]interface{} {
 	defer jsonFile.Close()
 	return result
 }
+
+func openjsonfromstring(jsstring string) map[string]interface{} {
+	var result map[string]interface{}
+	json.Unmarshal([]byte(jsstring), &result)
+	return result
+}
