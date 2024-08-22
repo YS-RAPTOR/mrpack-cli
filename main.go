@@ -17,6 +17,7 @@ func main() {
 	mrpack := os.Args[1]
 
 	downPtr := flag.Bool("download", true, "Set to false to skip downloads (default: true)")
+	entryPtr := flag.Bool("entry", true, "Set to true to make Minecraft launcher entry for the modpack (default: false)")
 
 	flag.Parse()
 
@@ -76,6 +77,20 @@ func main() {
 	}
 
 	addOverrides(packFolder, tempfolder)
+
+	if *entryPtr {
+		var gamever = "1.20" // Arbitrary version number
+
+		if vern, ok := jsonf["dependencies"].(map[string]interface{}); ok {
+			gamever = vern["minecraft"].(string)
+
+			if vern["fabric-loader"] != nil {
+				if installfabric(packFolder, tempfolder, gamever) != nil {
+					fmt.Println("Function: installfabric has errored out")
+				}
+			}
+		}
+	}
 
 	os.RemoveAll(tempfolder)
 }
