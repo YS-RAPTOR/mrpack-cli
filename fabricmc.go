@@ -51,7 +51,7 @@ func installfabric(packfolder, tempfolder, gameversion string) error {
 	fmt.Println("Running Fabric installer... (This might take a while)")
 	color.Unset()
 
-	fi := exec.Command(java_home, "-jar", tempfolder+"fabric-installer.jar", "client", "-mcversion", gameversion, "-dir", packfolder)
+	fi := exec.Command(java_home, "-jar", tempfolder+"fabric-installer.jar", "client", "-mcversion", gameversion)
 
 	output, err := fi.CombinedOutput()
 	if err != nil {
