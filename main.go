@@ -49,7 +49,7 @@ func main() {
 	exePath, err := os.Executable()
 	if err != nil {
 		color.Set(color.FgRed)
-		fmt.Println("Error getting executable path: %v\n", err)
+		fmt.Println("Error getting executable path: ", err)
 		color.Unset()
 		os.Exit(1)
 	}
@@ -57,7 +57,7 @@ func main() {
 	exePath, err = filepath.Abs(exePath)
 	if err != nil {
 		color.Set(color.FgRed)
-		fmt.Println("Error getting absolute path: %v\n", err)
+		fmt.Println("Error getting absolute path: ", err)
 		color.Unset()
 		os.Exit(1)
 	}
@@ -79,16 +79,12 @@ func main() {
 	addOverrides(packFolder, tempfolder)
 
 	if *entryPtr {
-		var gamever = "1.20" // Arbitrary version number
-
 		if vern, ok := jsonf["dependencies"].(map[string]interface{}); ok {
-			gamever = vern["minecraft"].(string)
-
 			if vern["fabric-loader"] != nil {
-				if installfabric(packFolder, tempfolder, gamever) != nil {
+				if installfabric(tempfolder, vern["minecraft"].(string), vern["fabric-loader"].(string)) != nil {
 					fmt.Println("Function: installfabric has errored out")
 				}
-				if addFabricEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf["name"].(string), " ", "-"))) != nil {
+				if addFabricEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf["name"].(string), " ", "-")), vern["minecraft"].(string), vern["fabric-loader"].(string)) != nil {
 					fmt.Println("Function: addFabricEntry has errored out")
 				}
 			}
