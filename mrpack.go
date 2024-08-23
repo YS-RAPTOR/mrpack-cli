@@ -29,7 +29,7 @@ func downloadMods(packFolder string, jsonf map[string]interface{}) {
 					color.Set(color.Bold)
 					fmt.Print(strings.Split(path, "/")[1])
 					color.Set(color.ResetBold)
-					fmt.Println(" ("+strconv.FormatInt(int64(downloaded), 10)+"/"+strconv.FormatInt(int64(len(mods)), 10)+")")
+					fmt.Println(" (" + strconv.FormatInt(int64(downloaded), 10) + "/" + strconv.FormatInt(int64(len(mods)), 10) + ")")
 					color.Unset()
 					out, err := os.Create(packFolder + "mods/" + strings.Split(path, "/")[1])
 					if err != nil {
@@ -90,11 +90,11 @@ func downloadResourcePacks(packFolder string, jsonf map[string]interface{}) {
 
 				if strings.Contains(path, "resourcepack") {
 					color.Set(color.FgBlue)
-					fmt.Print("Downloading resourcepack:") 
+					fmt.Print("Downloading resourcepack:")
 					color.Set(color.Bold)
 					fmt.Print(strings.Split(path, "/")[1])
 					color.Set(color.ResetBold)
-					fmt.Println("("+strconv.FormatInt(int64(downloaded), 10)+"/"+strconv.FormatInt(int64(len(mods)), 10)+")")
+					fmt.Println("(" + strconv.FormatInt(int64(downloaded), 10) + "/" + strconv.FormatInt(int64(len(mods)), 10) + ")")
 					color.Unset()
 					out, err := os.Create(packFolder + "resourcepacks/" + strings.Split(path, "/")[1])
 					if err != nil {
@@ -155,15 +155,15 @@ func addOverrides(packFolder string, tempFolder string) {
 		cmd, err := exec.Command("/bin/sh", "-c", "cp -r "+tempFolder+"overrides/* "+packFolder).Output()
 		if err != nil {
 			color.Set(color.FgRed)
-			fmt.Println("Could not copy overrides: %v", err)
+			fmt.Println("Could not copy overrides:", err)
 			color.Unset()
 		}
 		_ = cmd
 	case "windows":
-		cmd, err := exec.Command("xcopy", tempFolder+"overrides\\*", packFolder, "/E").Output()
-		if err != nil {
+		cmd, err := exec.Command("robocopy", tempFolder+"overrides", packFolder, "/s").Output()
+		if err != nil && err.Error() != "exit status 3" {
 			color.Set(color.FgRed)
-			fmt.Println("Could not copy overrides: %v", err)
+			fmt.Println("Could not copy overrides:", err)
 			color.Unset()
 		}
 		_ = cmd
