@@ -7,11 +7,13 @@ A simple command-line tool to extract .mrpack files
 
 ## Usage
 ```
-Usage of mrpack-cli:
+Usage of ./mrpack-cli [mrpack] [args]:
   -download
-        Set to false to skip downloads (default true)
+    	Set to false to skip downloads (default true)
   -entry
-        Set to true to make Minecraft launcher entry for the modpack (default true)
+    	Set to false to skip making entry in the Minecraft launcher (default true)
+  -output string
+    	Set where the modpack will be extracted (default "default")
 ```
 
 ## Getting Started
