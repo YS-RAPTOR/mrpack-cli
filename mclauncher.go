@@ -13,8 +13,9 @@ import (
 	"github.com/fatih/color"
 )
 
-func addEntry(packfolder, packname, fancypackname, gamever, fabricver, loader string) error {
+func addEntry(packfolder, packname, fancypackname, gamever, loaderver, loader string) error {
 	var launcherfolder string
+	var versionId string
 
 	userhome, err := os.UserHomeDir()
 	if err != nil {
@@ -77,6 +78,17 @@ func addEntry(packfolder, packname, fancypackname, gamever, fabricver, loader st
 	fmt.Println("Adding entry to Minecraft launcher")
 	color.Unset()
 
+	switch loader {
+	case "neoforge":
+		versionId = loader + "-" + loaderver
+	case "fabric-loader":
+		versionId = loader + "-" + loaderver + "-" + gamever
+	case "forge":
+		versionId = gamever + "-" + loader + "-" + loaderver
+	case "quilt-loader":
+		versionId = loader + "-" + loaderver + "-" + gamever
+	}
+
 	var ljs map[string]interface{} = openjson(launcherfolder + "launcher_profiles.json")
 	if pf, ok := ljs["profiles"].(map[string]interface{}); ok {
 		pf[packname] = map[string]interface{}{
@@ -86,7 +98,7 @@ func addEntry(packfolder, packname, fancypackname, gamever, fabricver, loader st
 			"lastUsed":      time.Time{},
 			"icon":          iconURI,
 			"gameDir":       packfolder,
-			"lastVersionId": loader + "-" + fabricver + "-" + gamever,
+			"lastVersionId": versionId,
 		}
 	}
 

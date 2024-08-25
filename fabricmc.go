@@ -20,7 +20,7 @@ func installfabric(tempfolder, gameversion, loaderver string) error {
 	out, err := os.Create(tempfolder + "/fabric-installer.jar")
 	if err != nil {
 		color.Set(color.FgRed, color.Bold)
-		fmt.Println("ERROR: Could not create fabric installer file")
+		fmt.Println("ERROR: Could not create fabric installer file:", err)
 		color.Unset()
 		return err
 	}
@@ -32,7 +32,7 @@ func installfabric(tempfolder, gameversion, loaderver string) error {
 	resp, err := http.Get("https://maven.fabricmc.net/net/fabricmc/fabric-installer/1.0.1/fabric-installer-1.0.1.jar")
 	if err != nil {
 		color.Set(color.FgRed, color.Bold)
-		fmt.Println("ERROR: Could not download fabric installer from " + resp.Request.URL.RequestURI())
+		fmt.Println("ERROR: Could not download fabric installer from "+resp.Request.URL.RequestURI(), "due to:", err)
 		color.Unset()
 		return err
 	}
@@ -40,7 +40,7 @@ func installfabric(tempfolder, gameversion, loaderver string) error {
 	n, err := io.Copy(out, resp.Body)
 	if err != nil {
 		color.Set(color.FgRed, color.Bold)
-		fmt.Println("ERROR: Could not copy fabric installer")
+		fmt.Println("ERROR: Could not copy fabric installer", err)
 		color.Unset()
 		return err
 	}
@@ -54,7 +54,7 @@ func installfabric(tempfolder, gameversion, loaderver string) error {
 
 	output, err := fi.CombinedOutput()
 	if err != nil {
-		fmt.Printf("Fabric installer failed: %v\n", err)
+		fmt.Printf("Fabric installer failed:", err)
 	}
 
 	fmt.Printf("%s\n", output)

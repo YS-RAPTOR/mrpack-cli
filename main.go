@@ -37,7 +37,7 @@ func main() {
 
 	fs.Parse(os.Args[2:])
 
-	fmt.Println("mrpack-cli 1.0.0-alpha.2")
+	fmt.Println("mrpack-cli 1.0.0")
 
 	var tempfolder = "mrpack-cli-" + strconv.FormatInt(rand.Int64N(99999), 10) + "/"
 
@@ -120,6 +120,10 @@ func main() {
 			if vern["fabric-loader"] != nil {
 				installfabric(tempfolder, vern["minecraft"].(string), vern["fabric-loader"].(string))
 				addEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf["name"].(string), " ", "-")), jsonf["name"].(string)+" "+jsonf["versionId"].(string), vern["minecraft"].(string), vern["fabric-loader"].(string), "fabric-loader")
+			}
+			if vern["neoforge"] != nil {
+				installNeoforge(tempfolder, vern["neoforge"].(string))
+				addEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf["name"].(string), " ", "-")), jsonf["name"].(string)+" "+jsonf["versionId"].(string), vern["minecraft"].(string), vern["neoforge"].(string), "neoforge")
 			}
 		}
 	}
