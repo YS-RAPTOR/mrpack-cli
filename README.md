@@ -2,9 +2,9 @@
 ![Current Build](https://github.com/oceanoc/mrpack-cli/actions/workflows/go.yml/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/oceanoc/mrpack-cli)](https://goreportcard.com/report/github.com/oceanoc/mrpack-cli)
 ###### This is a fanmade tool, It is not made or endorsed by Modrinth
-A simple command-line tool to extract .mrpack files
-⚠️ THIS IS STILL IN BETA, PLEASE REPORT BUGS TO [HERE](https://github.com/OceanOC/mrpack-cli/issues) ⚠️
+This application is now in [**maintainence mode**](https://en.wikipedia.org/wiki/Maintenance_mode)
 
+A simple command-line tool to extract .mrpack files
 ## Usage
 ```
 Usage of ./mrpack-cli [mrpack] [args]:
