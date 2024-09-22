@@ -2,25 +2,32 @@ package main
 
 import (
 	"encoding/json"
-	"io"
+	"fmt"
 	"os"
 )
 
-func openjson(tmpfolder string) map[string]interface{} {
-	jsonFile, err := os.Open(tmpfolder + "")
+func openjson(tmpfolder string) ModPack {
+	data, err := os.ReadFile(tmpfolder)
 	if err != nil {
-		panic(err)
+		fmt.Println("Could not open JSON:", err)
 	}
-	byteValue, _ := io.ReadAll(jsonFile)
-
-	var result map[string]interface{}
-	json.Unmarshal([]byte(byteValue), &result)
-	defer jsonFile.Close()
+	result := ModPack{}
+	json.Unmarshal(data, &result)
 	return result
 }
 
-func openjsonfromstring(jsstring string) map[string]interface{} {
-	var result map[string]interface{}
-	json.Unmarshal([]byte(jsstring), &result)
+func openMCjson(tmpfolder string) MineLauncher {
+	data, err := os.ReadFile(tmpfolder)
+	if err != nil {
+		fmt.Println("Could not open JSON:", err)
+	}
+	result := MineLauncher{}
+	json.Unmarshal(data, &result)
+	return result
+}
+
+func openMRjson(tmpfolder string) Modrinth {
+	result := Modrinth{}
+	json.Unmarshal([]byte(tmpfolder), &result)
 	return result
 }

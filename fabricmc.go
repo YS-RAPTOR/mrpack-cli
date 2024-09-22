@@ -54,7 +54,7 @@ func installfabric(tempfolder, gameversion, loaderver string) error {
 
 	output, err := fi.CombinedOutput()
 	if err != nil {
-		fmt.Printf("Fabric installer failed:", err)
+		fmt.Println("Fabric installer failed:", err)
 	}
 
 	fmt.Printf("%s\n", output)

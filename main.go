@@ -37,28 +37,29 @@ func main() {
 
 	fs.Parse(os.Args[2:])
 
-	fmt.Println("mrpack-cli 1.0.0")
+	fmt.Println("mrpack-cli 1.0.1")
 
 	var tempfolder = "mrpack-cli-" + strconv.FormatInt(rand.Int64N(99999), 10) + "/"
 
-	if runtime.GOOS == "windows" {
+	switch runtime.GOOS {
+	case "windows":
 		tempfolder = strings.ReplaceAll(tempfolder, "/", "\\")
 		tempfolder = os.Getenv("APPDATA") + "\\" + tempfolder
-	} else if runtime.GOOS == "linux" {
+	case "linux":
 		tempfolder = "/tmp/" + tempfolder
 	}
+
 	os.MkdirAll(tempfolder, 0700)
 	unzip(mrpack, tempfolder)
-	//var jsonf
-	var jsonf map[string]interface{} = openjson(tempfolder + "modrinth.index.json")
+	var jsonf = openjson(tempfolder + "modrinth.index.json")
 
-	if jsonf["game"] != "minecraft" {
+	if jsonf.Game != "minecraft" {
 		color.Set(color.FgRed)
 		fmt.Println("ERROR: Game not supported.")
 		color.Unset()
 		os.Exit(1)
 	}
-	if jsonf["formatVersion"].(float64) != 1 {
+	if jsonf.FormatVersion != 1 {
 		color.Set(color.FgYellow)
 		fmt.Println("WARNING: formatVersion not '1'.")
 		color.Unset()
@@ -83,7 +84,7 @@ func main() {
 	var packFolder = ""
 
 	if *outPtr == "default" {
-		packFolder = filepath.Dir(exePath) + "/" + strings.ToLower(strings.ReplaceAll(jsonf["name"].(string), " ", "-")+"/")
+		packFolder = filepath.Dir(exePath) + "/" + strings.ToLower(strings.ReplaceAll(jsonf.Name, " ", "-")+"/")
 	} else {
 		if !strings.HasSuffix(*outPtr, "\\") || !strings.HasSuffix(*outPtr, "/") {
 			if runtime.GOOS == "windows" {
@@ -97,7 +98,7 @@ func main() {
 
 		_, err = os.Stat(packFolder)
 		if os.IsNotExist(err) {
-			os.MkdirAll(packFolder, 755)
+			os.MkdirAll(packFolder, 0755)
 		}
 	}
 
@@ -116,15 +117,36 @@ func main() {
 	addOverrides(packFolder, tempfolder)
 
 	if *entryPtr {
-		if vern, ok := jsonf["dependencies"].(map[string]interface{}); ok {
-			if vern["fabric-loader"] != nil {
-				installfabric(tempfolder, vern["minecraft"].(string), vern["fabric-loader"].(string))
-				addEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf["name"].(string), " ", "-")), jsonf["name"].(string)+" "+jsonf["versionId"].(string), vern["minecraft"].(string), vern["fabric-loader"].(string), "fabric-loader")
+		if jsonf.Dependencies.Fabric != "" {
+			installfabric(tempfolder, jsonf.Dependencies.Minecraft, jsonf.Dependencies.Fabric)
+			addEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf.Name, " ", "-")), jsonf.Name+" "+jsonf.VersionID, jsonf.Dependencies.Minecraft, jsonf.Dependencies.Fabric, "fabric-loader")
+		}
+		if jsonf.Dependencies.NeoForge != "" {
+			installNeoforge(tempfolder, jsonf.Dependencies.NeoForge)
+			addEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf.Name, " ", "-")), jsonf.Name+" "+jsonf.VersionID, jsonf.Dependencies.Minecraft, jsonf.Dependencies.NeoForge, "neoforge")
+		}
+		if jsonf.Dependencies.Forge != "" {
+			var launcherfolder string
+			userhome, err := os.UserHomeDir()
+			if err != nil {
+				color.Set(color.FgRed)
+				fmt.Println("ERROR: Could not get home directory")
+				color.Unset()
+				os.Exit(1)
 			}
-			if vern["neoforge"] != nil {
-				installNeoforge(tempfolder, vern["neoforge"].(string))
-				addEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf["name"].(string), " ", "-")), jsonf["name"].(string)+" "+jsonf["versionId"].(string), vern["minecraft"].(string), vern["neoforge"].(string), "neoforge")
+			switch runtime.GOOS {
+			case "windows":
+				launcherfolder = os.Getenv("APPDATA") + "\\.minecraft\\"
+			case "linux":
+				launcherfolder = userhome + "/.minecraft/"
 			}
+
+			installForge(tempfolder, launcherfolder, jsonf.Dependencies.Minecraft, jsonf.Dependencies.Forge)
+			addEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf.Name, " ", "-")), jsonf.Name+" "+jsonf.VersionID, jsonf.Dependencies.Minecraft, jsonf.Dependencies.Forge, "forge")
+		}
+		if jsonf.Dependencies.Quilt != "" {
+			installQuilt(tempfolder, jsonf.Dependencies.Minecraft, jsonf.Dependencies.Quilt)
+			addEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf.Name, " ", "-")), jsonf.Name+" "+jsonf.VersionID, jsonf.Dependencies.Minecraft, jsonf.Dependencies.Quilt, "quilt-loader")
 		}
 	}
 

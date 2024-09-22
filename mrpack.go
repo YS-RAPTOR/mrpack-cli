@@ -17,102 +17,116 @@ import (
 
 var downloaded = 1
 
-func downloadMods(packFolder string, jsonf map[string]interface{}) {
-	if mods, ok := jsonf["files"].([]interface{}); ok {
-		for _, mod := range mods {
-			if modMap, ok := mod.(map[string]interface{}); ok {
-				path := modMap["path"].(string)
+type ModPack struct {
+	Name          string       `json:"name"`
+	Game          string       `json:"game"`
+	VersionID     string       `json:"versionId"`
+	FormatVersion int          `json:"formatVersion"`
+	Dependencies  Dependencies `json:"dependencies"`
+	Files         []Files      `json:"files"`
+}
 
-				if strings.Contains(path, "mods") {
-					color.Set(color.FgGreen)
-					fmt.Print("Downloading mod: ")
-					color.Set(color.Bold)
-					fmt.Print(strings.Split(path, "/")[1])
-					color.Set(color.ResetBold)
-					fmt.Println(" (" + strconv.FormatInt(int64(downloaded), 10) + "/" + strconv.FormatInt(int64(len(mods)), 10) + ")")
-					color.Unset()
-					out, err := os.Create(packFolder + "mods/" + strings.Split(path, "/")[1])
-					if err != nil {
-						panic(err)
-					}
-					defer out.Close()
-					for _, dwn := range modMap["downloads"].([]interface{}) {
-						//fmt.Println(dwn.(string))
-						resp, err := http.Get(dwn.(string))
-						if err != nil {
-							color.Set(color.FgRed)
-							fmt.Println("ERROR: Could not download mod:", err)
-							color.Unset()
-							break
-						}
-						n, err := io.Copy(out, resp.Body)
-						if err != nil {
-							color.Set(color.FgRed)
-							fmt.Println("ERROR: Could not copy mod data:", err)
-							color.Unset()
-							break
-						}
-						defer resp.Body.Close()
-						_ = n // Just to make the compiler shut up
+type Dependencies struct {
+	Fabric    string `json:"fabric-loader"`
+	Quilt     string `json:"quilt-loader"`
+	Minecraft string `json:"minecraft"`
+	NeoForge  string `json:"neoforge"`
+	Forge     string `json:"forge"`
+}
 
-						readSHA256(packFolder, path, modMap, true)
-					}
-					downloaded++
-				}
+type Files struct {
+	Path      string   `json:"path"`
+	Downloads []string `json:"downloads"`
+	Hashes    []string `json:"hashes"`
+}
+
+func downloadMods(packFolder string, mrpac ModPack) {
+	for i := range mrpac.Files {
+		modMap := mrpac.Files[i]
+
+		path := modMap.Path
+
+		if strings.Contains(path, "mods") {
+			color.Set(color.FgGreen)
+			fmt.Print("Downloading mod: ")
+			color.Set(color.Bold)
+			fmt.Print(strings.Split(path, "/")[1])
+			color.Set(color.ResetBold)
+			fmt.Println(" (" + strconv.FormatInt(int64(downloaded), 10) + "/" + strconv.FormatInt(int64(len(mrpac.Files)), 10) + ")")
+			color.Unset()
+			out, err := os.Create(packFolder + "mods/" + strings.Split(path, "/")[1])
+			if err != nil {
+				panic(err)
 			}
+			defer out.Close()
+			for i := range modMap.Downloads {
+				dwn := modMap.Downloads[i]
+
+				resp, err := http.Get(dwn)
+				if err != nil {
+					color.Set(color.FgRed)
+					fmt.Println("ERROR: Could not download mod:", err)
+					color.Unset()
+					break
+				}
+				_, err = io.Copy(out, resp.Body)
+				if err != nil {
+					color.Set(color.FgRed)
+					fmt.Println("ERROR: Could not copy mod data:", err)
+					color.Unset()
+					break
+				}
+				defer resp.Body.Close()
+
+				readSHA256(packFolder, path, modMap, true)
+			}
+			downloaded++
 		}
-	} else {
-		fmt.Println("Expected 'files' to be a slice, but got something else.")
 	}
 }
 
-func downloadResourcePacks(packFolder string, jsonf map[string]interface{}) {
-	if mods, ok := jsonf["files"].([]interface{}); ok {
-		for _, mod := range mods {
-			if modMap, ok := mod.(map[string]interface{}); ok {
-				path := modMap["path"].(string)
+func downloadResourcePacks(packFolder string, mrpac ModPack) {
+	for i := range mrpac.Files {
+		modMap := mrpac.Files[i]
 
-				if strings.Contains(path, "resourcepack") {
-					color.Set(color.FgBlue)
-					fmt.Print("Downloading resourcepack:")
-					color.Set(color.Bold)
-					fmt.Print(strings.Split(path, "/")[1])
-					color.Set(color.ResetBold)
-					fmt.Println("(" + strconv.FormatInt(int64(downloaded), 10) + "/" + strconv.FormatInt(int64(len(mods)), 10) + ")")
-					color.Unset()
-					out, err := os.Create(packFolder + "resourcepacks/" + strings.Split(path, "/")[1])
-					if err != nil {
-						panic(err)
-					}
-					defer out.Close()
-					for _, dwn := range modMap["downloads"].([]interface{}) {
-						//fmt.Println(dwn.(string))
-						resp, err := http.Get(dwn.(string))
-						if err != nil {
-							color.Set(color.FgRed)
-							fmt.Println("ERROR: Could not download resourcepack:", err)
-							color.Unset()
-							break
-						}
-						n, err := io.Copy(out, resp.Body)
-						if err != nil {
-							color.Set(color.FgRed)
-							fmt.Println("ERROR: Could not copy resourcepack:", err)
-							color.Unset()
-							break
-						}
-						defer resp.Body.Close()
-						_ = n // Just to make the compiler shut up
+		path := modMap.Path
 
-						readSHA256(packFolder, path, modMap, false)
-					}
-					downloaded++
-				}
+		if strings.Contains(path, "resourcepack") {
+			color.Set(color.FgBlue)
+			fmt.Print("Downloading resourcepack:")
+			color.Set(color.Bold)
+			fmt.Print(strings.Split(path, "/")[1])
+			color.Set(color.ResetBold)
+			fmt.Println("(" + strconv.FormatInt(int64(downloaded), 10) + "/" + strconv.FormatInt(int64(len(mrpac.Files)), 10) + ")")
+			color.Unset()
+			out, err := os.Create(packFolder + "resourcepacks/" + strings.Split(path, "/")[1])
+			if err != nil {
+				panic(err)
 			}
+			defer out.Close()
+			for i := range modMap.Downloads {
+				//fmt.Println(dwn.(string))
+				resp, err := http.Get(modMap.Downloads[i])
+				if err != nil {
+					color.Set(color.FgRed)
+					fmt.Println("ERROR: Could not download resourcepack:", err)
+					color.Unset()
+					break
+				}
+				n, err := io.Copy(out, resp.Body)
+				if err != nil {
+					color.Set(color.FgRed)
+					fmt.Println("ERROR: Could not copy resourcepack:", err)
+					color.Unset()
+					break
+				}
+				defer resp.Body.Close()
+				_ = n // Just to make the compiler shut up
+
+				readSHA256(packFolder, path, modMap, false)
+			}
+			downloaded++
 		}
-	} else {
-		fmt.Println("Expected 'files' to be a slice, but got ")
-		os.Exit(1)
 	}
 }
 
@@ -138,7 +152,7 @@ func addOverrides(packFolder string, tempFolder string) {
 	}
 }
 
-func readSHA256(packFolder, path string, modMap map[string]interface{}, ft bool) error {
+func readSHA256(packFolder, path string, modMap Files, ft bool) error {
 	var filetype string
 	if ft {
 		filetype = "mods/"
@@ -162,8 +176,8 @@ func readSHA256(packFolder, path string, modMap map[string]interface{}, ft bool)
 	}
 	f.Close()
 
-	if hashes, ok := modMap["hashes"].(map[string]interface{}); ok {
-		fhas := hashes["sha512"].(string)
+	for i := range modMap.Hashes {
+		fhas := modMap.Hashes[i]
 		if fhas != hex.EncodeToString(has.Sum(nil)) {
 			color.Set(color.FgRed)
 			fmt.Println("Warning: Potentially Modified File")

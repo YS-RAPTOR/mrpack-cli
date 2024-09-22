@@ -13,6 +13,20 @@ import (
 	"github.com/fatih/color"
 )
 
+type MineLauncher struct {
+	Profiles []map[string]Profile
+}
+
+type Profile struct {
+	Created       string `json:"created"`
+	Name          string `json:"name"`
+	Type          string `json:"type"`
+	Icon          string `json:"icon"`
+	LastUsed      string `json:"lastUsed"`
+	GameDirectory string `json:"gameDir"`
+	LastVersionID string `json:"lastVersionId"`
+}
+
 func addEntry(packfolder, packname, fancypackname, gamever, loaderver, loader string) error {
 	var launcherfolder string
 	var versionId string
@@ -53,26 +67,25 @@ func addEntry(packfolder, packname, fancypackname, gamever, loaderver, loader st
 
 	var iconURI string
 
-	var js map[string]interface{} = openjsonfromstring(string(api))
-	if uri, ok := js["icon_url"].(string); ok {
-		n, err := http.Get(uri)
-		if err != nil {
-			color.Set(color.FgRed)
-			fmt.Println("ERROR: Could not get icon:", err)
-			color.Unset()
-		}
-
-		d, err := io.ReadAll(n.Body)
-		if err != nil {
-			color.Set(color.FgRed)
-			fmt.Println("ERROR: Could not read icon:", err)
-			color.Unset()
-		}
-
-		img := base64.StdEncoding.EncodeToString(d)
-
-		iconURI = fmt.Sprintf("data:image/png;base64," + img)
+	var js = openMRjson(string(api))
+	uri := js.IconURL
+	n, err = http.Get(uri)
+	if err != nil {
+		color.Set(color.FgRed)
+		fmt.Println("ERROR: Could not get icon:", err)
+		color.Unset()
 	}
+
+	d, err := io.ReadAll(n.Body)
+	if err != nil {
+		color.Set(color.FgRed)
+		fmt.Println("ERROR: Could not read icon:", err)
+		color.Unset()
+	}
+
+	img := base64.StdEncoding.EncodeToString(d)
+
+	iconURI = fmt.Sprintf("data:image/png;base64," + img)
 
 	color.Set(color.FgGreen)
 	fmt.Println("Adding entry to Minecraft launcher")
@@ -89,17 +102,21 @@ func addEntry(packfolder, packname, fancypackname, gamever, loaderver, loader st
 		versionId = loader + "-" + loaderver + "-" + gamever
 	}
 
-	var ljs map[string]interface{} = openjson(launcherfolder + "launcher_profiles.json")
-	if pf, ok := ljs["profiles"].(map[string]interface{}); ok {
-		pf[packname] = map[string]interface{}{
-			"name":          fancypackname,
-			"type":          "custom",
-			"created":       time.Now().Format(time.RFC3339),
-			"lastUsed":      time.Time{},
-			"icon":          iconURI,
-			"gameDir":       packfolder,
-			"lastVersionId": versionId,
-		}
+	var ljs = openMCjson(launcherfolder + "launcher_profiles.json")
+	ljs = MineLauncher{
+		Profiles: []map[string]Profile{
+			{
+				packname: {
+					Name:          fancypackname,
+					Type:          "custom",
+					Created:       time.Now().Format(time.RFC3339),
+					LastUsed:      time.Time{}.String(),
+					Icon:          iconURI,
+					GameDirectory: packfolder,
+					LastVersionID: versionId,
+				},
+			},
+		},
 	}
 
 	ujs, err := json.MarshalIndent(ljs, "", "  ")
