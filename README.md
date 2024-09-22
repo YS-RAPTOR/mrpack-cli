@@ -18,8 +18,7 @@ Usage of ./mrpack-cli [mrpack] [args]:
 
 ## Getting Started
 ### Installing
-- Get `mrpack-cli` from [releases](https://github.com/OceanOC/mrpack-cli/releases)
-- Add to your PATH
+```go install github.com/oceanoc/mrpack-cli@latest```
 ### Building
 #### Dependencies
 [Golang](https://go.dev)
