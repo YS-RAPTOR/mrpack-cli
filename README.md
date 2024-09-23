@@ -4,15 +4,7 @@
 ###### This is a fanmade tool, It is not made or endorsed by Modrinth
 A simple command-line tool to extract .mrpack files
 ## Usage
-```
-Usage of ./mrpack-cli [mrpack] [args]:
-  -download
-    	Set to false to skip downloads (default true)
-  -entry
-    	Set to false to skip making entry in the Minecraft launcher (default true)
-  -output string
-    	Set where the modpack will be extracted (default "default")
-```
+![freeze](https://github.com/user-attachments/assets/36b87e91-fcda-4558-ad0e-0708f3187f0f)
 
 ## Getting Started
 ### Installing
