@@ -37,7 +37,7 @@ func main() {
 
 	fs.Parse(os.Args[2:])
 
-	fmt.Println("mrpack-cli 1.0.1")
+	fmt.Println("mrpack-cli 1.1.0")
 
 	var tempfolder = "mrpack-cli-" + strconv.FormatInt(rand.Int64N(99999), 10) + "/"
 
@@ -112,6 +112,7 @@ func main() {
 	if *downPtr {
 		downloadMods(packFolder, jsonf)
 		downloadResourcePacks(packFolder, jsonf)
+		downloadShaderPacks(packFolder, jsonf)
 	}
 
 	addOverrides(packFolder, tempfolder)

@@ -78,9 +78,55 @@ func downloadMods(packFolder string, mrpac ModPack) {
 				}
 				defer resp.Body.Close()
 
-				readSHA256(packFolder, path, modMap, true)
+				readSHA256(packFolder, path, modMap, "mods/")
 			}
 			downloaded++
+		}
+	}
+}
+
+func downloadShaderPacks(packFolder string, mrpac ModPack) {
+	for i := range mrpac.Files {
+		modMap := mrpac.Files[i]
+
+		path := modMap.Path
+
+		if strings.Contains(path, "shaderpacks") {
+			color.Set(color.FgYellow)
+			fmt.Print("Downloading shaderpack: ")
+			color.Set(color.Bold)
+			fmt.Print(strings.Split(path, "/")[1])
+			color.Set(color.ResetBold)
+			fmt.Println("(" + strconv.FormatInt(int64(downloaded), 10) + "/" + strconv.FormatInt(int64(len(mrpac.Files)), 10) + ")")
+			color.Unset()
+			out, err := os.Create(packFolder + "shaderpacks/" + strings.Split(path, "/")[1])
+			if err != nil {
+				color.Set(color.FgRed, color.Bold)
+				fmt.Println("Could not make shaderpacks folder:", err)
+				os.Exit(1)
+			}
+			defer out.Close()
+			for i := range modMap.Downloads {
+
+				resp, err := http.Get(modMap.Downloads[i])
+				if err != nil {
+					color.Set(color.FgRed)
+					fmt.Println("ERROR: Could not download shaderpack:", err)
+					color.Unset()
+					break
+				}
+
+				_, err = io.Copy(out, resp.Body)
+				if err != nil {
+					color.Set(color.FgRed)
+					fmt.Println("ERROR: Could not copy shaderpack data:", err)
+					color.Unset()
+					break
+				}
+				defer resp.Body.Close()
+
+				readSHA256(packFolder, path, modMap, "shaderpacks/")
+			}
 		}
 	}
 }
@@ -113,17 +159,16 @@ func downloadResourcePacks(packFolder string, mrpac ModPack) {
 					color.Unset()
 					break
 				}
-				n, err := io.Copy(out, resp.Body)
+				_, err = io.Copy(out, resp.Body)
 				if err != nil {
 					color.Set(color.FgRed)
-					fmt.Println("ERROR: Could not copy resourcepack:", err)
+					fmt.Println("ERROR: Could not copy resourcepack data:", err)
 					color.Unset()
 					break
 				}
 				defer resp.Body.Close()
-				_ = n // Just to make the compiler shut up
 
-				readSHA256(packFolder, path, modMap, false)
+				readSHA256(packFolder, path, modMap, "resourcepacks/")
 			}
 			downloaded++
 		}
@@ -152,13 +197,8 @@ func addOverrides(packFolder string, tempFolder string) {
 	}
 }
 
-func readSHA256(packFolder, path string, modMap Files, ft bool) error {
-	var filetype string
-	if ft {
-		filetype = "mods/"
-	} else {
-		filetype = "resourcepacks/"
-	}
+func readSHA256(packFolder, path string, modMap Files, ft string) error {
+	filetype := ft
 	f, err := os.Open(packFolder + filetype + strings.Split(path, "/")[1])
 	if err != nil {
 		color.Set(color.FgRed)
