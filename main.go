@@ -24,6 +24,7 @@ func main() {
 	mrpack := os.Args[1]
 
 	downPtr := flag.Bool("download", true, "Set to false to skip downloads")
+	skipoptPtr := flag.Bool("skipopt", false, "Set to true to skip optional downloads")
 	entryPtr := flag.Bool("entry", true, "Set to false to skip making entry in the Minecraft launcher")
 	outPtr := flag.String("output", "default", "Set where the modpack will be extracted")
 
@@ -33,11 +34,12 @@ func main() {
 
 	fs.StringVar(outPtr, "output", "default", "Set where the modpack will be extracted")
 	fs.BoolVar(downPtr, "download", true, "Set to false to skip downloads")
+	fs.BoolVar(skipoptPtr, "skipopt", true, "Set to true to skip optional downloads")
 	fs.BoolVar(entryPtr, "entry", true, "Set to false to skip making entry in the Minecraft launcher")
 
 	fs.Parse(os.Args[2:])
 
-	fmt.Println("mrpack-cli 1.1.0")
+	fmt.Println("mrpack-cli 1.2.0")
 
 	var tempfolder = "mrpack-cli-" + strconv.FormatInt(rand.Int64N(99999), 10) + "/"
 
@@ -108,6 +110,10 @@ func main() {
 	color.Set(color.FgGreen)
 	fmt.Println("The modpack will be downloaded to: '" + packFolder + "'")
 	color.Unset()
+
+	if *skipoptPtr {
+		jsonf.DownloadOptional = true
+	}
 
 	if *downPtr {
 		downloadMods(packFolder, jsonf)
