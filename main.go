@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -41,7 +40,7 @@ func main() {
 
 	fmt.Println("mrpack-cli 1.2.0")
 
-	var tempfolder = "mrpack-cli-" + strconv.FormatInt(rand.Int64N(99999), 10) + "/"
+	tempfolder := "mrpack-cli-" + strconv.FormatInt(rand.Int64N(99999), 10) + "/"
 
 	switch runtime.GOOS {
 	case "windows":
@@ -53,7 +52,7 @@ func main() {
 
 	os.MkdirAll(tempfolder, 0700)
 	unzip(mrpack, tempfolder)
-	var jsonf = openjson(tempfolder + "modrinth.index.json")
+	jsonf := openjson(tempfolder + "modrinth.index.json")
 
 	if jsonf.Game != "minecraft" {
 		color.Set(color.FgRed)
@@ -67,26 +66,10 @@ func main() {
 		color.Unset()
 	}
 
-	exePath, err := os.Executable()
-	if err != nil {
-		color.Set(color.FgRed)
-		fmt.Println("ERROR: getting executable path: ", err)
-		color.Unset()
-		os.Exit(1)
-	}
-
-	exePath, err = filepath.Abs(exePath)
-	if err != nil {
-		color.Set(color.FgRed)
-		fmt.Println("ERROR: getting absolute path: ", err)
-		color.Unset()
-		os.Exit(1)
-	}
-
-	var packFolder = ""
+	packFolder := ""
 
 	if *outPtr == "default" {
-		packFolder = filepath.Dir(exePath) + "/" + strings.ToLower(strings.ReplaceAll(jsonf.Name, " ", "-")+"/")
+		packFolder = "./"
 	} else {
 		if !strings.HasSuffix(*outPtr, "\\") || !strings.HasSuffix(*outPtr, "/") {
 			if runtime.GOOS == "windows" {
@@ -98,7 +81,7 @@ func main() {
 			packFolder = *outPtr
 		}
 
-		_, err = os.Stat(packFolder)
+		_, err := os.Stat(packFolder)
 		if os.IsNotExist(err) {
 			os.MkdirAll(packFolder, 0755)
 		}
@@ -111,10 +94,6 @@ func main() {
 	fmt.Println("The modpack will be downloaded to: '" + packFolder + "'")
 	color.Unset()
 
-	if *skipoptPtr {
-		jsonf.DownloadOptional = true
-	}
-
 	if *downPtr {
 		downloadMods(packFolder, jsonf)
 		downloadResourcePacks(packFolder, jsonf)
@@ -122,40 +101,6 @@ func main() {
 	}
 
 	addOverrides(packFolder, tempfolder)
-
-	if *entryPtr {
-		if jsonf.Dependencies.Fabric != "" {
-			installfabric(tempfolder, jsonf.Dependencies.Minecraft, jsonf.Dependencies.Fabric)
-			addEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf.Name, " ", "-")), jsonf.Name+" "+jsonf.VersionID, jsonf.Dependencies.Minecraft, jsonf.Dependencies.Fabric, "fabric-loader")
-		}
-		if jsonf.Dependencies.NeoForge != "" {
-			installNeoforge(tempfolder, jsonf.Dependencies.NeoForge)
-			addEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf.Name, " ", "-")), jsonf.Name+" "+jsonf.VersionID, jsonf.Dependencies.Minecraft, jsonf.Dependencies.NeoForge, "neoforge")
-		}
-		if jsonf.Dependencies.Forge != "" {
-			var launcherfolder string
-			userhome, err := os.UserHomeDir()
-			if err != nil {
-				color.Set(color.FgRed)
-				fmt.Println("ERROR: Could not get home directory")
-				color.Unset()
-				os.Exit(1)
-			}
-			switch runtime.GOOS {
-			case "windows":
-				launcherfolder = os.Getenv("APPDATA") + "\\.minecraft\\"
-			case "linux":
-				launcherfolder = userhome + "/.minecraft/"
-			}
-
-			installForge(tempfolder, launcherfolder, jsonf.Dependencies.Minecraft, jsonf.Dependencies.Forge)
-			addEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf.Name, " ", "-")), jsonf.Name+" "+jsonf.VersionID, jsonf.Dependencies.Minecraft, jsonf.Dependencies.Forge, "forge")
-		}
-		if jsonf.Dependencies.Quilt != "" {
-			installQuilt(tempfolder, jsonf.Dependencies.Minecraft, jsonf.Dependencies.Quilt)
-			addEntry(packFolder, strings.ToLower(strings.ReplaceAll(jsonf.Name, " ", "-")), jsonf.Name+" "+jsonf.VersionID, jsonf.Dependencies.Minecraft, jsonf.Dependencies.Quilt, "quilt-loader")
-		}
-	}
 
 	os.RemoveAll(tempfolder)
 }
